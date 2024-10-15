@@ -550,7 +550,7 @@ const Map = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="container mx-auto px-4 py-8 overflow-hidden"
+      className="container mx-auto px-4 py-8 overflow-hidden flex flex-col justify-between h-screen"
     >
       <motion.div
         initial={{ scale: 0.9 }}
@@ -601,7 +601,7 @@ const Map = () => {
       <motion.div
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
-        className="h-6 sm:h-8 bg-[#E81B23] mb-4 rounded-full overflow-hidden"
+        className="min-h-6 sm:min-h-8 bg-[#E81B23] mb-4 rounded-full overflow-hidden"
       >
         <motion.div
           className="h-full bg-[#00AEF3]"
@@ -613,7 +613,7 @@ const Map = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="mb-4 text-center text-sm sm:text-xl"
+        className="mb-auto text-center text-sm sm:text-xl"
       >
         Democrat: {democratVotes.toLocaleString()} | Republican:{" "}
         {republicanVotes.toLocaleString()}
