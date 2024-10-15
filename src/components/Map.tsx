@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { createPortal } from 'react-dom';
+import { createPortal } from "react-dom";
 import { useState } from "react";
 
 const statesData = [
@@ -280,19 +280,22 @@ type ElectionData = {
   };
 };
 
-
-const Tooltip: React.FC<{ content: string; x: number; y: number }> = ({ content, x, y }) => {
+const Tooltip: React.FC<{ content: string; x: number; y: number }> = ({
+  content,
+  x,
+  y,
+}) => {
   return createPortal(
     <div
       style={{
-        position: 'fixed',
+        position: "fixed",
         top: y + 10,
         left: x + 10,
-        backgroundColor: 'white',
-        border: '1px solid black',
-        padding: '5px',
+        backgroundColor: "white",
+        border: "1px solid black",
+        padding: "5px",
         zIndex: 1000,
-        pointerEvents: 'none'
+        pointerEvents: "none",
       }}
       dangerouslySetInnerHTML={{ __html: content }}
     />,
@@ -302,41 +305,61 @@ const Tooltip: React.FC<{ content: string; x: number; y: number }> = ({ content,
 
 const Map = () => {
   const [year, setYear] = useState(2020);
-  const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
+  const [tooltip, setTooltip] = useState({
+    visible: false,
+    content: "",
+    x: 0,
+    y: 0,
+  });
 
-  const { data = { candidates: { democrat: "Joe Biden", republican: "Donald Trump" }, votes: {} }, isLoading } = useQuery<ElectionData>({
+  const {
+    data = {
+      candidates: { democrat: "Joe Biden", republican: "Donald Trump" },
+      votes: {},
+    },
+    isLoading,
+  } = useQuery<ElectionData>({
     queryKey: ["data", year],
     queryFn: () => fetch(`./data/${year}.json`).then((res) => res.json()),
   });
 
-  const handleMouseLeave = () => setTooltip(prev => ({ ...prev, visible: false }));
+  const handleMouseLeave = () =>
+    setTooltip((prev) => ({ ...prev, visible: false }));
 
   const handleMouseMove = (event: React.MouseEvent) => {
     if (tooltip.visible) {
-      setTooltip(prev => ({ ...prev, x: event.clientX, y: event.clientY }));
+      setTooltip((prev) => ({ ...prev, x: event.clientX, y: event.clientY }));
     }
   };
 
-  const [voteSystem, setVoteSystem] = useState('electoral');
+  const [voteSystem, setVoteSystem] = useState("electoral");
 
   const calculateVotes = () => {
     let democratVotes = 0;
     let republicanVotes = 0;
 
-    if (voteSystem === 'electoral') {
-      Object.values(data.votes).forEach(state => {
+    if (voteSystem === "electoral") {
+      Object.values(data.votes).forEach((state) => {
         democratVotes += state.electoral.democrat;
         republicanVotes += state.electoral.republican;
       });
-    } else if (voteSystem === 'proportional') {
-      Object.values(data.votes).forEach(state => {
-        const totalVotes = state.popular.democrat + state.popular.republican + state.popular.other;
-        const totalElectors = state.electoral.democrat + state.electoral.republican;
-        democratVotes += Math.round((state.popular.democrat / totalVotes) * totalElectors);
-        republicanVotes += Math.round((state.popular.republican / totalVotes) * totalElectors);
+    } else if (voteSystem === "proportional") {
+      Object.values(data.votes).forEach((state) => {
+        const totalVotes =
+          state.popular.democrat +
+          state.popular.republican +
+          state.popular.other;
+        const totalElectors =
+          state.electoral.democrat + state.electoral.republican;
+        democratVotes += Math.round(
+          (state.popular.democrat / totalVotes) * totalElectors
+        );
+        republicanVotes += Math.round(
+          (state.popular.republican / totalVotes) * totalElectors
+        );
       });
-    } else if (voteSystem === 'popular') {
-      Object.values(data.votes).forEach(state => {
+    } else if (voteSystem === "popular") {
+      Object.values(data.votes).forEach((state) => {
         democratVotes += state.popular.democrat;
         republicanVotes += state.popular.republican;
       });
@@ -348,36 +371,44 @@ const Map = () => {
   const { democratVotes, republicanVotes } = calculateVotes();
   const totalVotes = democratVotes + republicanVotes;
   const democratPercentage = (democratVotes / totalVotes) * 100;
-  const winner = democratVotes > republicanVotes ? data.candidates.democrat : data.candidates.republican;
+  const winner =
+    democratVotes > republicanVotes
+      ? data.candidates.democrat
+      : data.candidates.republican;
 
   const getStateColor = (stateId: string) => {
     const stateData = data.votes[stateId];
-    if (!stateData) return '#D3D3D3'; // Default color for unknown states
+    if (!stateData) return "#D3D3D3"; // Default color for unknown states
 
-    if (voteSystem === 'electoral') {
+    if (voteSystem === "electoral") {
       if (stateData.electoral.democrat > stateData.electoral.republican) {
-        return '#00AEF3'; // Blue for Democrat
-      } else if (stateData.electoral.republican > stateData.electoral.democrat) {
-        return '#E81B23'; // Red for Republican
+        return "#00AEF3"; // Blue for Democrat
+      } else if (
+        stateData.electoral.republican > stateData.electoral.democrat
+      ) {
+        return "#E81B23"; // Red for Republican
       }
-    } else if (voteSystem === 'popular') {
-      return 'url(#national-gradient)';
+    } else if (voteSystem === "popular") {
+      return "url(#national-gradient)";
     }
 
-    return '#800080'; // Purple for tie
+    return "#800080"; // Purple for tie
   };
 
-  const handleMouseEnter = (event: React.MouseEvent<SVGPathElement>, stateId: string) => {
+  const handleMouseEnter = (
+    event: React.MouseEvent<SVGPathElement>,
+    stateId: string
+  ) => {
     const stateData = data.votes[stateId];
     if (stateData) {
       let content = `<div class="font-bold">${stateId}</div>`;
 
-      if (voteSystem === 'electoral') {
+      if (voteSystem === "electoral") {
         content += `
           <div>Electoral Votes (Dem): ${stateData.electoral.democrat}</div>
           <div>Electoral Votes (Rep): ${stateData.electoral.republican}</div>
         `;
-      } else if (voteSystem === 'proportional') {
+      } else if (voteSystem === "proportional") {
         const { democrat, republican } = calculateProportionalElectors(stateId);
         content += `
           <div>Proportional Electoral Votes (Dem): ${democrat}</div>
@@ -391,25 +422,37 @@ const Map = () => {
         <div>Popular Votes (Other): ${stateData.popular.other.toLocaleString()}</div>
       `;
 
-      setTooltip({ visible: true, content, x: event.clientX, y: event.clientY });
+      setTooltip({
+        visible: true,
+        content,
+        x: event.clientX,
+        y: event.clientY,
+      });
     }
   };
-
 
   const calculateProportionalElectors = (stateId: string) => {
     const stateData = data.votes[stateId];
     if (!stateData) return { democrat: 0, republican: 0 };
 
-    const totalVotes = stateData.popular.democrat + stateData.popular.republican + stateData.popular.other;
-    const totalElectors = stateData.electoral.democrat + stateData.electoral.republican;
-    const democratElectors = Math.round((stateData.popular.democrat / totalVotes) * totalElectors);
-    const republicanElectors = Math.round((stateData.popular.republican / totalVotes) * totalElectors);
+    const totalVotes =
+      stateData.popular.democrat +
+      stateData.popular.republican +
+      stateData.popular.other;
+    const totalElectors =
+      stateData.electoral.democrat + stateData.electoral.republican;
+    const democratElectors = Math.round(
+      (stateData.popular.democrat / totalVotes) * totalElectors
+    );
+    const republicanElectors = Math.round(
+      (stateData.popular.republican / totalVotes) * totalElectors
+    );
 
     return { democrat: democratElectors, republican: republicanElectors };
   };
 
   const getStateBboxCenter = (stateId: string) => {
-    const state = statesData.find(s => s.id === stateId);
+    const state = statesData.find((s) => s.id === stateId);
     if (!state) return null;
 
     const path = document.getElementById(stateId) as SVGPathElement | null;
@@ -418,12 +461,12 @@ const Map = () => {
     const bbox = path.getBBox();
     return {
       x: bbox.x + bbox.width / 2,
-      y: bbox.y + bbox.height / 2
+      y: bbox.y + bbox.height / 2,
     };
   };
 
   const getStateCenter = (stateId: string) => {
-    const state = statesData.find(s => s.id === stateId);
+    const state = statesData.find((s) => s.id === stateId);
     if (!state) return null;
 
     const path = document.getElementById(stateId) as SVGPathElement | null;
@@ -432,7 +475,7 @@ const Map = () => {
     const bbox = path.getBBox();
     return {
       x: bbox.x + bbox.width / 2 + state.center[0],
-      y: bbox.y + bbox.height / 2 + state.center[1]
+      y: bbox.y + bbox.height / 2 + state.center[1],
     };
   };
 
@@ -446,33 +489,37 @@ const Map = () => {
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
-        className="mb-8 flex justify-between items-center"
+        className="mb-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0"
       >
         <select
           onChange={(e) => setYear(parseInt(e.target.value))}
           value={year}
-          className="select select-bordered max-w-xs"
+          className="select select-bordered max-w-xs w-full sm:w-auto"
         >
-          {[2020, 2016, 2012, 2008, 2004, 2000].map(y => (
-            <option key={y} value={y}>{y}</option>
+          {[2020, 2016, 2012, 2008, 2004, 2000].map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
           ))}
         </select>
         <div className="tabs tabs-boxed">
           <a
-            className={`tab ${voteSystem === 'electoral' ? 'tab-active' : ''}`}
-            onClick={() => setVoteSystem('electoral')}
+            className={`tab ${voteSystem === "electoral" ? "tab-active" : ""}`}
+            onClick={() => setVoteSystem("electoral")}
           >
             Electoral College
           </a>
           <a
-            className={`tab ${voteSystem === 'proportional' ? 'tab-active' : ''}`}
-            onClick={() => setVoteSystem('proportional')}
+            className={`tab ${
+              voteSystem === "proportional" ? "tab-active" : ""
+            }`}
+            onClick={() => setVoteSystem("proportional")}
           >
             Proportional Electors
           </a>
           <a
-            className={`tab ${voteSystem === 'popular' ? 'tab-active' : ''}`}
-            onClick={() => setVoteSystem('popular')}
+            className={`tab ${voteSystem === "popular" ? "tab-active" : ""}`}
+            onClick={() => setVoteSystem("popular")}
           >
             National Popular Vote
           </a>
@@ -481,14 +528,14 @@ const Map = () => {
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
-        className="mb-4 text-center text-2xl font-bold"
+        className="mb-4 text-center text-xl sm:text-2xl font-bold"
       >
         Winner: {winner}
       </motion.div>
       <motion.div
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
-        className="h-8 bg-[#E81B23] mb-4 rounded-full overflow-hidden"
+        className="h-6 sm:h-8 bg-[#E81B23] mb-4 rounded-full overflow-hidden"
       >
         <motion.div
           className="h-full bg-[#00AEF3]"
@@ -500,13 +547,17 @@ const Map = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="mb-0 text-center text-xl"
+        className="mb-4 text-center text-sm sm:text-xl"
       >
-        Democrat: {democratVotes.toLocaleString()} | Republican: {republicanVotes.toLocaleString()}
+        Democrat: {democratVotes.toLocaleString()} | Republican:{" "}
+        {republicanVotes.toLocaleString()}
       </motion.div>
       <motion.div
-        initial={{ scale: 0.5 }}
-        animate={{ scale: 0.7, y: -130 }}
+        initial={{ scale: 0.9 }}
+        animate={{
+          scale: 1,
+        }}
+        className="w-full h-auto"
       >
         <svg
           version="1.1"
@@ -515,7 +566,13 @@ const Map = () => {
           onMouseMove={handleMouseMove}
         >
           <defs>
-            <linearGradient id="popularVoteGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient
+              id="popularVoteGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="0%"
+            >
               <stop offset="0%" stopColor="#00AEF3" />
               <stop offset={`${democratPercentage}%`} stopColor="#00AEF3" />
               <stop offset={`${democratPercentage}%`} stopColor="#E81B23" />
@@ -523,14 +580,20 @@ const Map = () => {
             </linearGradient>
           </defs>
           <g id="g5">
-           {statesData.map((state) => {
+            {statesData.map((state) => {
               const stateCenter = getStateCenter(state.id);
               const stateBboxCenter = getStateBboxCenter(state.id);
               return (
                 <g key={state.id}>
                   <motion.path
                     id={state.id}
-                    fill={voteSystem === 'popular' ? 'url(#popularVoteGradient)' : (voteSystem === 'proportional' ? '#D3D3D3' : getStateColor(state.id))}
+                    fill={
+                      voteSystem === "popular"
+                        ? "url(#popularVoteGradient)"
+                        : voteSystem === "proportional"
+                        ? "#D3D3D3"
+                        : getStateColor(state.id)
+                    }
                     d={state.d}
                     onMouseEnter={(e) => handleMouseEnter(e, state.id)}
                     onMouseLeave={handleMouseLeave}
@@ -538,12 +601,12 @@ const Map = () => {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.15 }}
                   />
-                  {voteSystem === 'proportional' && stateCenter && (
+                  {voteSystem === "proportional" && stateCenter && (
                     <g>
                       <text
                         x={stateCenter.x}
                         y={stateCenter.y - 8}
-                        fontSize="18"
+                        fontSize="14"
                         fontWeight="bold"
                         fill="#00AEF3"
                         textAnchor="middle"
@@ -554,7 +617,7 @@ const Map = () => {
                       <text
                         x={stateCenter.x}
                         y={stateCenter.y + 8}
-                        fontSize="18"
+                        fontSize="14"
                         fontWeight="bold"
                         fill="#E81B23"
                         textAnchor="middle"
@@ -564,19 +627,63 @@ const Map = () => {
                       </text>
                       {state.drawArrow && stateBboxCenter && stateCenter && (
                         <>
-                        <line
-                          x1={stateCenter.x + Math.cos(Math.atan2(stateBboxCenter.y - stateCenter.y, stateBboxCenter.x - stateCenter.x)) * 8}
-                          y1={stateCenter.y + Math.sin(Math.atan2(stateBboxCenter.y - stateCenter.y, stateBboxCenter.x - stateCenter.x)) * 8}
-                          x2={stateBboxCenter.x}
-                          y2={stateBboxCenter.y}
-                          stroke="#FF00FF"
-                          strokeWidth="4"
-                        />
-                        <path
-                          d="M0,0 L5,5 L-5,5 Z"
-                          fill="#FF00FF"
-                          transform={`translate(${stateBboxCenter.x + Math.cos(Math.atan2(stateBboxCenter.y - stateCenter.y, stateBboxCenter.x - stateCenter.x)) * 2}, ${stateBboxCenter.y + Math.sin(Math.atan2(stateBboxCenter.y - stateCenter.y, stateBboxCenter.x - stateCenter.x)) * 2}) rotate(${90 + Math.atan2(stateBboxCenter.y - stateCenter.y, stateBboxCenter.x - stateCenter.x) * 180 / Math.PI})`}
-                        />
+                          <line
+                            x1={
+                              stateCenter.x +
+                              Math.cos(
+                                Math.atan2(
+                                  stateBboxCenter.y - stateCenter.y,
+                                  stateBboxCenter.x - stateCenter.x
+                                )
+                              ) *
+                                8
+                            }
+                            y1={
+                              stateCenter.y +
+                              Math.sin(
+                                Math.atan2(
+                                  stateBboxCenter.y - stateCenter.y,
+                                  stateBboxCenter.x - stateCenter.x
+                                )
+                              ) *
+                                8
+                            }
+                            x2={stateBboxCenter.x}
+                            y2={stateBboxCenter.y}
+                            stroke="#FF00FF"
+                            strokeWidth="2"
+                          />
+                          <path
+                            d="M0,0 L3,3 L-3,3 Z"
+                            fill="#FF00FF"
+                            transform={`translate(${
+                              stateBboxCenter.x +
+                              Math.cos(
+                                Math.atan2(
+                                  stateBboxCenter.y - stateCenter.y,
+                                  stateBboxCenter.x - stateCenter.x
+                                )
+                              ) *
+                                2
+                            }, ${
+                              stateBboxCenter.y +
+                              Math.sin(
+                                Math.atan2(
+                                  stateBboxCenter.y - stateCenter.y,
+                                  stateBboxCenter.x - stateCenter.x
+                                )
+                              ) *
+                                2
+                            }) rotate(${
+                              90 +
+                              (Math.atan2(
+                                stateBboxCenter.y - stateCenter.y,
+                                stateBboxCenter.x - stateCenter.x
+                              ) *
+                                180) /
+                                Math.PI
+                            })`}
+                          />
                         </>
                       )}
                     </g>
@@ -592,7 +699,13 @@ const Map = () => {
               />
               <motion.circle
                 id="circle60"
-                fill={voteSystem === 'popular' ? 'url(#popularVoteGradient)' : (voteSystem === 'proportional' ? '#D3D3D3' : getStateColor("DC"))}
+                fill={
+                  voteSystem === "popular"
+                    ? "url(#popularVoteGradient)"
+                    : voteSystem === "proportional"
+                    ? "#D3D3D3"
+                    : getStateColor("DC")
+                }
                 stroke="#FFFFFF"
                 strokeWidth="1.5"
                 cx="975.3"
@@ -607,12 +720,12 @@ const Map = () => {
               />
             </g>
           </g>
-          {voteSystem === 'proportional' && (
+          {voteSystem === "proportional" && (
             <g>
               <text
                 x="1075.3"
                 y="343.8"
-                fontSize="18"
+                fontSize="14"
                 fontWeight="bold"
                 fill="#00AEF3"
                 textAnchor="middle"
@@ -623,7 +736,7 @@ const Map = () => {
               <text
                 x="1075.3"
                 y="359.8"
-                fontSize="18"
+                fontSize="14"
                 fontWeight="bold"
                 fill="#E81B23"
                 textAnchor="middle"
@@ -637,10 +750,10 @@ const Map = () => {
                 x2="985.3"
                 y2="354.8"
                 stroke="#FF00FF"
-                strokeWidth="4"
+                strokeWidth="2"
               />
               <path
-                d="M0,0 L5,5 L-5,5 Z"
+                d="M0,0 L3,3 L-3,3 Z"
                 fill="#FF00FF"
                 transform="translate(985.3, 356.8) rotate(165)"
               />
@@ -650,7 +763,7 @@ const Map = () => {
             id="path67"
             fill="none"
             stroke="#A9A9A9"
-            strokeWidth="2"
+            strokeWidth="1"
             d="M385,593v55l36,45 M174,525h144l67,68h86l53,54v46"
           />
         </svg>
