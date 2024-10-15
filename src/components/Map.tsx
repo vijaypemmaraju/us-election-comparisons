@@ -639,7 +639,7 @@ const Map = () => {
               const stateDemocratPercentage = stateVotes
                 ? stateVotes.popular.democrat / (stateVotes.popular.democrat + stateVotes.popular.republican + stateVotes.popular.other)
                 : 0.5;
-              const alwaysProportional = state.alwaysProportional;
+              const alwaysProportional = state.alwaysProportional && voteSystem !== "popular";
               return (
                 <g key={state.id}>
                   <motion.path
