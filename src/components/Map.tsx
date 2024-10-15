@@ -66,6 +66,7 @@ const statesData = [
     id: "ME",
     d: "M1097.2,177.3l1.9,2.1l2.3,3.7v1.9l-2.1,4.7l-1.9,0.6l-3.4,3.1l-4.8,5.5c0,0-0.6,0-1.3,0   c-0.6,0-1-2.1-1-2.1l-1.8,0.2l-1,1.5l-2.4,1.5l-1,1.5l1.6,1.5l-0.5,0.6l-0.5,2.7l-1.9-0.2v-1.6l-0.3-1.3l-1.5,0.3l-1.8-3.2   l-2.1,1.3l1.3,1.5l0.3,1.1l-0.8,1.3l0.3,3.1l0.2,1.6l-1.6,2.6l-2.9,0.5l-0.3,2.9l-5.3,3.1l-1.3,0.5l-1.6-1.5l-3.1,3.6l1,3.2   l-1.5,1.3l-0.2,4.4l-1.1,6.3l-2.5-1.2l-0.5-3.1l-3.9-1.1l-0.3-2.7l-7.3-23.4l-4.2-13.6l1.4-0.1l1.5,0.4v-2.6l0.8-5.5l2.6-4.7l1.5-4   l-1.9-2.4v-6l0.8-1l0.8-2.7l-0.2-1.5l-0.2-4.8l1.8-4.8l2.9-8.9l2.1-4.2h1.3l1.3,0.2v1.1l1.3,2.3l2.7,0.6l0.8-0.8v-1l4-2.9l1.8-1.8   l1.5,0.2l6,2.4l1.9,1l9.1,29.9h6l0.8,1.9l0.2,4.8l2.9,2.3h0.8l0.2-0.5l-0.5-1.1L1097.2,177.3z M1076.3,207.5l1.5-1.5l1.4,1.1   l0.6,2.4l-1.7,0.9L1076.3,207.5z M1083,201.6l1.8,1.9c0,0,1.3,0.1,1.3-0.2s0.2-2,0.2-2l0.9-0.8l-0.8-1.8l-2,0.7L1083,201.6z",
     center: [0, 0],
+    alwaysProportional: true,
   },
   {
     id: "NH",
@@ -197,6 +198,7 @@ const statesData = [
     id: "NE",
     d: "M658.2,347l1.4,2.7l0.1,2.1l2.4,3.7l2.7,3.2h-5l-43.5-0.9l-40.8-0.9l-21.2-1l1.1-21.3l-33.4-2.7   l4.3-44l15.5,1L562,290l17.8,1.1l23.8,1.1l10.7-0.5l2.1,2.3l4.8,3l1.1,0.9l4.3-1.4l3.9-0.5l2.7-0.2l1.8,1.4l5,1.6l3,1.6l0.5,1.6   l0.9,2.1h1.8l0.8,0l1,5.2l2.7,8l1.2,4.6l2.1,3.8l0.5,4.9l1.4,4.3l0.5,6.5",
     center: [0, 0],
+    alwaysProportional: true,
   },
   {
     id: "IA",
@@ -558,7 +560,7 @@ const Map = () => {
         <select
           onChange={(e) => setYear(parseInt(e.target.value))}
           value={year}
-          className="select select-bordered max-w-xs w-full sm:w-auto"
+          className="select select-bordered max-w-xs w-full mb-4 sm:mb-0 sm:w-auto"
         >
           {[2020, 2016, 2012, 2008, 2004, 2000].map((y) => (
             <option key={y} value={y}>
@@ -566,15 +568,15 @@ const Map = () => {
             </option>
           ))}
         </select>
-        <div className="tabs tabs-boxed">
+        <div className="tabs tabs-boxed flex flex-wrap justify-center">
           <a
-            className={`tab ${voteSystem === "electoral" ? "tab-active" : ""}`}
+            className={`flex items-center gap-2 tab tab-sm sm:tab-md ${voteSystem === "electoral" ? "tab-active" : ""}`}
             onClick={() => setVoteSystem("electoral")}
           >
             Electoral College
           </a>
           <a
-            className={`tab ${
+            className={`tab tab-sm sm:tab-md ${
               voteSystem === "proportional" ? "tab-active" : ""
             }`}
             onClick={() => setVoteSystem("proportional")}
@@ -582,7 +584,7 @@ const Map = () => {
             Proportional Electors
           </a>
           <a
-            className={`tab ${voteSystem === "popular" ? "tab-active" : ""}`}
+            className={`tab tab-sm sm:tab-md ${voteSystem === "popular" ? "tab-active" : ""}`}
             onClick={() => setVoteSystem("popular")}
           >
             National Popular Vote
@@ -637,6 +639,7 @@ const Map = () => {
               const stateDemocratPercentage = stateVotes
                 ? stateVotes.popular.democrat / (stateVotes.popular.democrat + stateVotes.popular.republican + stateVotes.popular.other)
                 : 0.5;
+              const alwaysProportional = state.alwaysProportional;
               return (
                 <g key={state.id}>
                   <motion.path
@@ -649,13 +652,13 @@ const Map = () => {
                       opacity: 1,
                       fill: voteSystem === "popular"
                         ? interpolateColor("#E81B23", "#00AEF3", stateDemocratPercentage)
-                        : voteSystem === "proportional"
+                        : (voteSystem === "proportional" || alwaysProportional)
                         ? "#D3D3D3"
                         : getStateColor(state.id)
                     }}
                     transition={{ duration: 0.15 }}
                   />
-                  {voteSystem === "proportional" && stateCenter && (
+                  {(voteSystem === "proportional" || alwaysProportional) && stateCenter && (
                     <g>
                       <text
                         x={stateCenter.x}
