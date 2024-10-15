@@ -9,6 +9,11 @@ import App from '../components/App';
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Astro</title>
+		<style>
+			body {
+				overflow: hidden;
+			}
+		</style>
 	</head>
 	<body>
 		<App client:only />

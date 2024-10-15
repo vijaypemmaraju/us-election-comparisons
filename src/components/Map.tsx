@@ -309,21 +309,6 @@ const Map = () => {
     queryFn: () => fetch(`./data/${year}.json`).then((res) => res.json()),
   });
 
-  const handleMouseEnter = (event: React.MouseEvent<SVGPathElement>, stateId: string) => {
-    const stateData = data.votes[stateId];
-    if (stateData) {
-      const content = `
-        <div class="font-bold">${stateId}</div>
-        <div>Electoral Votes (Dem): ${stateData.electoral.democrat}</div>
-        <div>Electoral Votes (Rep): ${stateData.electoral.republican}</div>
-        <div>Popular Votes (Dem): ${stateData.popular.democrat.toLocaleString()}</div>
-        <div>Popular Votes (Rep): ${stateData.popular.republican.toLocaleString()}</div>
-        <div>Popular Votes (Other): ${stateData.popular.other.toLocaleString()}</div>
-      `;
-      setTooltip({ visible: true, content, x: event.clientX, y: event.clientY });
-    }
-  };
-
   const handleMouseLeave = () => setTooltip(prev => ({ ...prev, visible: false }));
 
   const handleMouseMove = (event: React.MouseEvent) => {
@@ -331,21 +316,6 @@ const Map = () => {
       setTooltip(prev => ({ ...prev, x: event.clientX, y: event.clientY }));
     }
   };
-
-  const totalElectoralVotes = Object.values(data.votes).reduce(
-    (sum, state) => sum + state.electoral.democrat + state.electoral.republican,
-    0
-  );
-
-  const democratElectoralVotes = Object.values(data.votes).reduce(
-    (sum, state) => sum + state.electoral.democrat,
-    0
-  );
-
-  const republicanElectoralVotes = Object.values(data.votes).reduce(
-    (sum, state) => sum + state.electoral.republican,
-    0
-  );
 
   const [voteSystem, setVoteSystem] = useState('electoral');
 
@@ -397,6 +367,35 @@ const Map = () => {
     return '#800080'; // Purple for tie
   };
 
+  const handleMouseEnter = (event: React.MouseEvent<SVGPathElement>, stateId: string) => {
+    const stateData = data.votes[stateId];
+    if (stateData) {
+      let content = `<div class="font-bold">${stateId}</div>`;
+
+      if (voteSystem === 'electoral') {
+        content += `
+          <div>Electoral Votes (Dem): ${stateData.electoral.democrat}</div>
+          <div>Electoral Votes (Rep): ${stateData.electoral.republican}</div>
+        `;
+      } else if (voteSystem === 'proportional') {
+        const { democrat, republican } = calculateProportionalElectors(stateId);
+        content += `
+          <div>Proportional Electoral Votes (Dem): ${democrat}</div>
+          <div>Proportional Electoral Votes (Rep): ${republican}</div>
+        `;
+      }
+
+      content += `
+        <div>Popular Votes (Dem): ${stateData.popular.democrat.toLocaleString()}</div>
+        <div>Popular Votes (Rep): ${stateData.popular.republican.toLocaleString()}</div>
+        <div>Popular Votes (Other): ${stateData.popular.other.toLocaleString()}</div>
+      `;
+
+      setTooltip({ visible: true, content, x: event.clientX, y: event.clientY });
+    }
+  };
+
+
   const calculateProportionalElectors = (stateId: string) => {
     const stateData = data.votes[stateId];
     if (!stateData) return { democrat: 0, republican: 0 };
@@ -442,15 +441,8 @@ const Map = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="container mx-auto px-4 py-8"
+      className="container mx-auto px-4 py-8 overflow-hidden"
     >
-      <motion.h1
-        initial={{ y: -50 }}
-        animate={{ y: 0 }}
-        className="text-4xl font-bold mb-8 text-center"
-      >
-        US Election Map
-      </motion.h1>
       <motion.div
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
@@ -508,25 +500,22 @@ const Map = () => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="mb-8 text-center text-xl"
+        className="mb-0 text-center text-xl"
       >
         Democrat: {democratVotes.toLocaleString()} | Republican: {republicanVotes.toLocaleString()}
       </motion.div>
       <motion.div
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        className="mb-8"
+        initial={{ scale: 0.5 }}
+        animate={{ scale: 0.7, y: -130 }}
       >
         <svg
           version="1.1"
           id="us-map"
-          preserveAspectRatio="xMinYMin meet"
           viewBox="174 100 959 593"
-          className="w-full h-auto"
           onMouseMove={handleMouseMove}
         >
           <defs>
-            <linearGradient id="national-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="popularVoteGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#00AEF3" />
               <stop offset={`${democratPercentage}%`} stopColor="#00AEF3" />
               <stop offset={`${democratPercentage}%`} stopColor="#E81B23" />
@@ -541,7 +530,7 @@ const Map = () => {
                 <g key={state.id}>
                   <motion.path
                     id={state.id}
-                    fill={voteSystem === 'proportional' ? '#D3D3D3' : getStateColor(state.id)}
+                    fill={voteSystem === 'popular' ? 'url(#popularVoteGradient)' : (voteSystem === 'proportional' ? '#D3D3D3' : getStateColor(state.id))}
                     d={state.d}
                     onMouseEnter={(e) => handleMouseEnter(e, state.id)}
                     onMouseLeave={handleMouseLeave}
@@ -603,7 +592,7 @@ const Map = () => {
               />
               <motion.circle
                 id="circle60"
-                fill={voteSystem === 'proportional' ? '#D3D3D3' : getStateColor("DC")}
+                fill={voteSystem === 'popular' ? 'url(#popularVoteGradient)' : (voteSystem === 'proportional' ? '#D3D3D3' : getStateColor("DC"))}
                 stroke="#FFFFFF"
                 strokeWidth="1.5"
                 cx="975.3"
@@ -616,32 +605,6 @@ const Map = () => {
                 transition={{ duration: 0.5 }}
                 whileHover={{ scale: 1.2 }}
               />
-              {/* {voteSystem === 'proportional' && (
-                <g>
-                  <text
-                    x="1275.3"
-                    y="349.8"
-                    fontSize="18"
-                    fontWeight="bold"
-                    fill="#00AEF3"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                  >
-                    {calculateProportionalElectors("DC").democrat}
-                  </text>
-                  <text
-                    x="975.3"
-                    y="353.8"
-                    fontSize="18"
-                    fontWeight="bold"
-                    fill="#00AEF3"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                  >
-                    {calculateProportionalElectors("DC").republican}
-                  </text>
-                </g>
-              )} */}
             </g>
           </g>
           <path
@@ -656,42 +619,6 @@ const Map = () => {
       {tooltip.visible && (
         <Tooltip content={tooltip.content} x={tooltip.x} y={tooltip.y} />
       )}
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="overflow-x-auto"
-      >
-        <table className="table table-zebra w-full">
-          <thead>
-            <tr>
-              <th>State</th>
-              <th>Electoral Votes (Dem)</th>
-              <th>Electoral Votes (Rep)</th>
-              <th>Popular Votes (Dem)</th>
-              <th>Popular Votes (Rep)</th>
-              <th>Popular Votes (Other)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(data.votes).map(([state, stateData]) => (
-              <motion.tr
-                key={state}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <td>{state}</td>
-                <td>{stateData.electoral.democrat}</td>
-                <td>{stateData.electoral.republican}</td>
-                <td>{stateData.popular.democrat.toLocaleString()}</td>
-                <td>{stateData.popular.republican.toLocaleString()}</td>
-                <td>{stateData.popular.other.toLocaleString()}</td>
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
-      </motion.div>
     </motion.div>
   );
 };
