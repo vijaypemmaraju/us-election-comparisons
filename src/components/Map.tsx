@@ -479,6 +479,70 @@ const Map = () => {
     };
   };
 
+  const interpolateColor = (color1: string, color2: string, value: number) => {
+    const hex2rgb = (hex: string) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return [r, g, b];
+    };
+
+    const rgb2hsv = (r: number, g: number, b: number) => {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0, s, v = max;
+
+      const d = max - min;
+      s = max === 0 ? 0 : d / max;
+
+      if (max === min) {
+        h = 0;
+      } else {
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+
+      return [h, s, v];
+    };
+
+    const hsv2rgb = (h: number, s: number, v: number) => {
+      let r, g, b;
+      const i = Math.floor(h * 6);
+      const f = h * 6 - i;
+      const p = v * (1 - s);
+      const q = v * (1 - f * s);
+      const t = v * (1 - (1 - f) * s);
+
+      switch (i % 6) {
+        case 0: r = v; g = t; b = p; break;
+        case 1: r = q; g = v; b = p; break;
+        case 2: r = p; g = v; b = t; break;
+        case 3: r = p; g = q; b = v; break;
+        case 4: r = t; g = p; b = v; break;
+        case 5: r = v; g = p; b = q; break;
+      }
+
+      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    };
+
+    const rgb1 = hex2rgb(color1);
+    const rgb2 = hex2rgb(color2);
+    const hsv1 = rgb2hsv(rgb1[0], rgb1[1], rgb1[2]);
+    const hsv2 = rgb2hsv(rgb2[0], rgb2[1], rgb2[2]);
+
+    const h = hsv1[0] + (hsv2[0] - hsv1[0]) * value;
+    const s = hsv1[1] + (hsv2[1] - hsv1[1]) * value;
+    const v = hsv1[2] + (hsv2[2] - hsv1[2]) * value;
+
+    const rgb = hsv2rgb(h, s, v);
+    return `#${rgb[0].toString(16).padStart(2, '0')}${rgb[1].toString(16).padStart(2, '0')}${rgb[2].toString(16).padStart(2, '0')}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -565,40 +629,30 @@ const Map = () => {
           viewBox="174 100 959 593"
           onMouseMove={handleMouseMove}
         >
-          <defs>
-            <linearGradient
-              id="popularVoteGradient"
-              x1="0%"
-              y1="0%"
-              x2="100%"
-              y2="0%"
-            >
-              <stop offset="0%" stopColor="#00AEF3" />
-              <stop offset={`${democratPercentage}%`} stopColor="#00AEF3" />
-              <stop offset={`${democratPercentage}%`} stopColor="#E81B23" />
-              <stop offset="100%" stopColor="#E81B23" />
-            </linearGradient>
-          </defs>
           <g id="g5">
             {statesData.map((state) => {
               const stateCenter = getStateCenter(state.id);
               const stateBboxCenter = getStateBboxCenter(state.id);
+              const stateVotes = data.votes[state.id];
+              const stateDemocratPercentage = stateVotes
+                ? stateVotes.popular.democrat / (stateVotes.popular.democrat + stateVotes.popular.republican + stateVotes.popular.other)
+                : 0.5;
               return (
                 <g key={state.id}>
                   <motion.path
                     id={state.id}
-                    fill={
-                      voteSystem === "popular"
-                        ? "url(#popularVoteGradient)"
-                        : voteSystem === "proportional"
-                        ? "#D3D3D3"
-                        : getStateColor(state.id)
-                    }
                     d={state.d}
                     onMouseEnter={(e) => handleMouseEnter(e, state.id)}
                     onMouseLeave={handleMouseLeave}
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    animate={{
+                      opacity: 1,
+                      fill: voteSystem === "popular"
+                        ? interpolateColor("#E81B23", "#00AEF3", stateDemocratPercentage)
+                        : voteSystem === "proportional"
+                        ? "#D3D3D3"
+                        : getStateColor(state.id)
+                    }}
                     transition={{ duration: 0.15 }}
                   />
                   {voteSystem === "proportional" && stateCenter && (
