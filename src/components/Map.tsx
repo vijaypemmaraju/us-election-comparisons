@@ -281,7 +281,7 @@ type ElectionData = {
 };
 
 
-const Tooltip = ({ content, x, y }) => {
+const Tooltip: React.FC<{ content: string; x: number; y: number }> = ({ content, x, y }) => {
   return createPortal(
     <div
       style={{
