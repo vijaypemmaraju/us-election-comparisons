@@ -7,6 +7,7 @@ import tailwind from '@astrojs/tailwind';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://us-election-comparisons.github.io',
+  site: 'https://vijaypemmaraju.github.io',
+  base: '/us-election-comparisons/',
   integrations: [react(), tailwind()]
 });
