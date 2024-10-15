@@ -529,7 +529,7 @@ const Map = () => {
         case 5: r = v; g = p; b = q; break;
       }
 
-      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+      return [Math.round((r || 0) * 255), Math.round((g || 0) * 255), Math.round((b || 0) * 255)];
     };
 
     const rgb1 = hex2rgb(color1);
