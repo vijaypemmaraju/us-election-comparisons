@@ -607,6 +607,45 @@ const Map = () => {
               />
             </g>
           </g>
+          {voteSystem === 'proportional' && (
+            <g>
+              <text
+                x="1075.3"
+                y="343.8"
+                fontSize="18"
+                fontWeight="bold"
+                fill="#00AEF3"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {calculateProportionalElectors("DC").democrat}
+              </text>
+              <text
+                x="1075.3"
+                y="359.8"
+                fontSize="18"
+                fontWeight="bold"
+                fill="#E81B23"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {calculateProportionalElectors("DC").republican}
+              </text>
+              <line
+                x1="1065.3"
+                y1="351.8"
+                x2="985.3"
+                y2="354.8"
+                stroke="#FF00FF"
+                strokeWidth="4"
+              />
+              <path
+                d="M0,0 L5,5 L-5,5 Z"
+                fill="#FF00FF"
+                transform="translate(985.3, 356.8) rotate(165)"
+              />
+            </g>
+          )}
           <path
             id="path67"
             fill="none"
